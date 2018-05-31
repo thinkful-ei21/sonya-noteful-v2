@@ -46,14 +46,13 @@ router.get('/:id', (req, res, next) => {
     .from('notes')
     .where('id', id)
     .then(([results]) => {
-      if (!results) {
-        throw new Error('Not Found');
-      } else {
+      if (results) {
         res.json(results);
+      } else {
+        next();
       }
     })
     .catch(err => {
-      err.status = 404;
       next(err);
     });
 });
@@ -95,11 +94,15 @@ router.put('/:id', (req, res, next) => {
   knex('notes') 
     .where('id', id)
     .update(updateObj)
-    .then(results =>  {
-      res.json(results);
+    .returning(['id', 'title', 'content'])
+    .then(([result]) =>  {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
     })
     .catch(err => {
-      err.status = 404;
       next(err);
     });
 });
@@ -132,9 +135,10 @@ router.post('/', (req, res, next) => {
   knex 
     .insert(newItem)
     .into('notes')
-    .returning(['title', 'content'])
+    .returning(['id','title', 'content'])
     .then(results => {
-      res.json(results);
+      const result = results[0];
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })
     .catch(err => {
       next(err);

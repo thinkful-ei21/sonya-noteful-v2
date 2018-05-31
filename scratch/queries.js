@@ -52,8 +52,8 @@ const knex = require('../knex');
 const id = 1001;
 knex('notes')
   .where('id', id)
-  .del();
-  //.then(results => console.log(JSON.stringify(results, null, 2)));
+  .del()
+  .then(results => console.log(JSON.stringify(results, null, 2)));
 
 knex
   .select('id')
