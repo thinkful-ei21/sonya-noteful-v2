@@ -41,7 +41,8 @@ VALUES
 ('Personal'),
 ('Work');
 
-SELECT * FROM notes
-LEFT JOIN folders ON notes.folder_id = folders.ID
-WHERE notes.id = 1004;
+DELETE 
+FROM folders
+WHERE id > 4;
+
 

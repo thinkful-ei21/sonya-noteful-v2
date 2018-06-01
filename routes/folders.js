@@ -58,6 +58,7 @@ router.put('/:id', (req, res, next) => {
     .update(updatedFolder)
     .returning(['id', 'name'])
     .then(([result]) => {
+      console.log(result);
       if (result) {
         res.json(result);
       } else {

@@ -83,27 +83,33 @@ router.put('/:id', (req, res, next) => {
   const id = req.params.id;
 
   /***** Never trust users - validate input *****/
-  const updateObj = {};
-  const updateableFields = ['title', 'content'];
+  const {title, content, folderId} = req.body;
 
-  updateableFields.forEach(field => {
-    if (field in req.body) {
-      updateObj[field] = req.body[field];
-    }
-  });
+  const updateObj = {
+    title,
+    content,
+    folder_id: (folderId) ? folderId : null
+  };
 
   /***** Never trust users - validate input *****/
   if (!updateObj.title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
-    return next(err);
+    return next(err);  
   }
 
+
   knex('notes') 
-    .where('id', id)
     .update(updateObj)
-    .returning(['id', 'title', 'content'])
-    .then(([result]) =>  {
+    .where('id', id)
+    .returning(['id'])
+    .then(() =>  {
+      return knex.select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .from('notes')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', id);
+    })
+    .then(([result]) => {
       if (result) {
         res.json(result);
       } else {
@@ -130,9 +136,16 @@ router.put('/:id', (req, res, next) => {
 
 // Post (insert) an item
 router.post('/', (req, res, next) => {
-  const { title, content } = req.body;
+  const { title, content, folderId } = req.body;
 
-  const newItem = { title, content };
+  const newItem = { 
+    title, 
+    content, 
+    folder_id: (folderId) ? folderId : null
+  };
+  
+  let noteId;
+
   /***** Never trust users - validate input *****/
   if (!newItem.title) {
     const err = new Error('Missing `title` in request body');
@@ -143,9 +156,16 @@ router.post('/', (req, res, next) => {
   knex 
     .insert(newItem)
     .into('notes')
-    .returning(['id','title', 'content'])
-    .then(results => {
-      const result = results[0];
+    .returning('id')
+    .then(([id]) => {
+      noteId = id;
+      // Using the new id, select the new note and the folder
+      return knex.select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .from('notes')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', noteId);
+    })
+    .then(([result]) => {
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })
     .catch(err => {
