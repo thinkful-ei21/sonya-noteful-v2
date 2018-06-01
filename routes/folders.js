@@ -39,6 +39,31 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
+
+
+//Post a new folder
+
+router.post('/', (req, res, next) => {
+  const {name} = req.body;
+  const newFolder = {name};
+
+  /*Validate User input*/
+  if (!newFolder) {
+    const err = new Error('Missing `name` from request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  knex
+    .insert(newFolder)
+    .into('folders')
+    .returning(['id', 'name'])
+    .then(results => {
+      const result = results[0];
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+    });
+});
+
 // Put update a folder
 router.put('/:id', (req, res, next) => {
   const id = req.params.id;
@@ -67,29 +92,6 @@ router.put('/:id', (req, res, next) => {
     .catch(err => {
       next(err);
     }); 
-});
-
-//Post a new folder
-
-router.post('/', (req, res, next) => {
-  const {name} = req.body;
-  const newFolder = {name};
-
-  /*Validate User input*/
-  if (!newFolder) {
-    const err = new Error('Missing `name` from request body');
-    err.status = 400;
-    return next(err);
-  }
-
-  knex
-    .insert(newFolder)
-    .into('folders')
-    .returning(['id', 'name'])
-    .then(results => {
-      const result = results[0];
-      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
-    });
 });
 
 //Delete a folder

@@ -78,61 +78,7 @@ router.get('/:id', (req, res, next) => {
 //     });
 // });
 
-// Put update an item
-router.put('/:id', (req, res, next) => {
-  const id = req.params.id;
 
-  /***** Never trust users - validate input *****/
-  const {title, content, folderId} = req.body;
-
-  const updateObj = {
-    title,
-    content,
-    folder_id: (folderId) ? folderId : null
-  };
-
-  /***** Never trust users - validate input *****/
-  if (!updateObj.title) {
-    const err = new Error('Missing `title` in request body');
-    err.status = 400;
-    return next(err);  
-  }
-
-
-  knex('notes') 
-    .update(updateObj)
-    .where('id', id)
-    .returning(['id'])
-    .then(() =>  {
-      return knex.select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
-        .from('notes')
-        .leftJoin('folders', 'notes.folder_id', 'folders.id')
-        .where('notes.id', id);
-    })
-    .then(([result]) => {
-      if (result) {
-        res.json(result);
-      } else {
-        next();
-      }
-    })
-    .catch(err => {
-      next(err);
-    });
-});
-
-// notes.update(id, updateObj)
-//   .then(item => {
-//     if (item) {
-//       res.json(item);
-//     } else {
-//       next();
-//     }
-//   })
-//   .catch(err => {
-//     next(err);
-//   });
-// });
 
 // Post (insert) an item
 router.post('/', (req, res, next) => {
@@ -183,6 +129,62 @@ router.post('/', (req, res, next) => {
 //     .catch(err => {
 //       next(err);
 //     });
+// });
+
+// Put update an item
+router.put('/:id', (req, res, next) => {
+  const id = req.params.id;
+
+  /***** Never trust users - validate input *****/
+  const {title, content, folderId} = req.body;
+
+  const updateObj = {
+    title,
+    content,
+    folder_id: (folderId) ? folderId : null
+  };
+
+  /***** Never trust users - validate input *****/
+  if (!updateObj.title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);  
+  }
+
+
+  knex('notes') 
+    .where('id', id)
+    .update(updateObj)
+    .returning(['id'])
+    .then(() =>  {
+      return knex.select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .from('notes')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', id);
+    })
+    .then(([result]) => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+
+// notes.update(id, updateObj)
+//   .then(item => {
+//     if (item) {
+//       res.json(item);
+//     } else {
+//       next();
+//     }
+//   })
+//   .catch(err => {
+//     next(err);
+//   });
 // });
 
 // Delete an item

@@ -40,4 +40,29 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
+// POST a new tag
+
+router.post('/', (req, res, next) => {
+  const {name} = req.body;
+  const newTag = {name};
+  console.log(newTag);
+  console.log(req.body);
+
+  //Validate User Input
+  if(!newTag) {
+    const err = new Error ('Missing `name` from request body');
+    err.status = 400;
+    return next(err);  
+  }
+
+  knex
+    .insert(newTag)
+    .into('tags')
+    .returning(['id', 'name'])
+    .then(results => {
+      const result = results[0];
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+    });
+});
+
 module.exports = router;
