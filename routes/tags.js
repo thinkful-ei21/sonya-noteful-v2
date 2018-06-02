@@ -65,4 +65,50 @@ router.post('/', (req, res, next) => {
     });
 });
 
+// PUT update a tag
+router.put('/:id', (req, res, next) => {
+  const id = req.params.id;
+  const {name} = req.body;
+  const updatedTag = {name};
+  
+  //Validate user input
+  if(!updatedTag) {
+    const err = new Error('Missing `name` from request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  knex('folders')
+    .where('id', id)
+    .update(updatedTag)
+    .returning(['id', 'name'])
+    .then(([result]) => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+
+//Delete a tag
+router.delete('/:id', (req, res, next) => {
+  const id = req.params.id;
+
+  knex('tags')
+    .where('id', id)
+    .del()
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+
+
+
 module.exports = router;
