@@ -78,7 +78,7 @@ router.put('/:id', (req, res, next) => {
     return next(err);
   }
 
-  knex('folders')
+  knex('tags')
     .where('id', id)
     .update(updatedTag)
     .returning(['id', 'name'])
